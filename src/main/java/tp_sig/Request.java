@@ -106,7 +106,7 @@ public class Request {
         st = connection.createStatement();
         //prepareStatement("SELECT linestring, tags->'highway' as highway FROM ways WHERE tags?'highway' LIMIT 1;");
         //result limited to 3 right now
-        res = st.executeQuery("SELECT linestring, tags->'highway' as highway FROM ways WHERE tags?'highway' LIMIT 3000;");
+        res = st.executeQuery("SELECT linestring, tags->'highway' as highway FROM ways WHERE tags?'highway' AND ST_Intersects(ways.bbox,ST_SetSRID(ST_MakeBox2D(ST_Point(5.7,45.1),ST_Point(5.8,45.2)),4326));");
 
         while (res.next()) {
             Geometry g = ((PGgeometry) res.getObject(1)).getGeometry();
