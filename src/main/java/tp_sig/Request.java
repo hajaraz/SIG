@@ -47,14 +47,22 @@ public class Request {
     }
 
     /**
-     * Qestion 10
+     * Qestion 10a
      * L'ensemble des routes autour de Grenoble
      * @param connection
      */
-    public static void question10(Connection connection) throws SQLException{
+    public static void question10a(Connection connection) throws SQLException{
         getGrenobleRoutes(connection);
     }
 
+    /**
+     * Qestion 10b
+     * @param connection
+     * @throws SQLException
+     */
+    public static void question10b(Connection connection) throws SQLException{
+        getGrenobleBuilding(connection);
+    }
 
     /**
      * Recuperer les noms et coordonnées d'un nom particulier - Méthode 1
@@ -116,19 +124,48 @@ public class Request {
 
             for (int i = 0; i < g.numPoints(); i++){
                 p=g.getPoint(i);
-                //if(p.getX() < 5.8 && p.getX() > 5.7){
-                   // if(p.getY() < 45.2 && p.getY() > 45.1){
-                        drawedPoint = new geoexplorer.gui.Point(p.getX(),p.getY(), Color.blue);
-                        drawedLineString.addPoint(drawedPoint);
-                   // }
-               // }
+                drawedPoint = new geoexplorer.gui.Point(p.getX(),p.getY(), Color.blue);
+                drawedLineString.addPoint(drawedPoint);
                 //Print all the points
                 System.out.println("Nom = " + res.getString("highway"));
                 System.out.println("\t\tLongitude = " + p.getX());
                 System.out.println("\t\tLatitude = " + p.getY());
             }
             map.addPrimitive(drawedLineString);
+        }
+        map.autoAdjust();
+    }
 
+    /**
+     * Recuperer les batiments de Grenoble
+     * @param connection
+     * @throws SQLException
+     */
+    public static void getGrenobleBuilding(Connection connection) throws SQLException {
+        MapPanel map = new MapPanel(4.75,44.01,0.1);
+        GeoMainFrame geo = new GeoMainFrame("Map", map);
+
+        st = connection.createStatement();
+        //prepareStatement("SELECT linestring, tags->'highway' as highway FROM ways WHERE tags?'highway' LIMIT 1;");
+        //result limited to 3 right now
+        res = st.executeQuery("SELECT linestring, tags->'highway' as highway FROM ways WHERE tags?'highway' AND ST_Intersects(ways.bbox,ST_SetSRID(ST_MakeBox2D(ST_Point(5.7,45.1),ST_Point(5.8,45.2)),4326));");
+
+        while (res.next()) {
+            Geometry g = ((PGgeometry) res.getObject(1)).getGeometry();
+            Point p = null;
+            geoexplorer.gui.Point drawedPoint = null;
+            geoexplorer.gui.Polygon drawedPolygon = new geoexplorer.gui.Polygon();
+
+            for (int i = 0; i < g.numPoints(); i++){
+                p=g.getPoint(i);
+                drawedPoint = new geoexplorer.gui.Point(p.getX(),p.getY(), Color.blue);
+                drawedPolygon.addPoint(drawedPoint);
+                //Print all the points
+                System.out.println("Nom = " + res.getString("highway"));
+                System.out.println("\t\tLongitude = " + p.getX());
+                System.out.println("\t\tLatitude = " + p.getY());
+            }
+            map.addPrimitive(drawedPolygon);
         }
         map.autoAdjust();
     }
