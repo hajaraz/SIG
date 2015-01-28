@@ -15,7 +15,7 @@ public class SigMain {
     private static String key = null;
     static Scanner readKeyBoard = new Scanner(System.in);
 
-    public static void main(String[] args) throws SQLException {
+    public static void main(String[] args)  {
         /*Menu*/
         System.out.println("-------Menu---------");
         System.out.println("q8 : Question 8");
@@ -36,16 +36,28 @@ public class SigMain {
                     System.out.println("tape the value you want to search...");
                     String value = null;
                     value = readKeyBoard.nextLine();
-                    Request.question8(connection, tags, value);
+                    try {
+                        Request.question8(connection, tags, value);
+                    } catch (SQLException e) {
+                        System.out.println("Error SQL");
+                    }
                     break;
                 case "q9":
                     System.out.println("tape the name you want to search...");
                     String name = null;
                     name = readKeyBoard.nextLine();
-                    Request.question9(connection, name);
+                    try {
+                        Request.question9(connection, name);
+                    } catch (SQLException e) {
+                        System.out.println("Error SQL");
+                    }
                     break;
                 case "q10":
-                    Request.question10(connection);
+                    try {
+                        Request.question10(connection);
+                    } catch (SQLException e) {
+                        System.out.println("Error SQL");
+                    }
                     break;
                 case "help":
                     System.out.println("q8 : Question 8");
