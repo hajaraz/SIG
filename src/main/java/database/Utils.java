@@ -16,8 +16,8 @@ import java.util.logging.Logger;
  */
 public class Utils {
     private static Connection connection;
-    private static String login = "monLogin";
-    private static String password = "monMDP";
+    private static String login = "edahk";
+    private static String password = "edahk";
     
     
     public static Connection getConnection() {

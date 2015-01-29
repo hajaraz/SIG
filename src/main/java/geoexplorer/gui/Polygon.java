@@ -4,12 +4,8 @@
  */
 package geoexplorer.gui;
 
-import java.awt.Color;
-import java.awt.Graphics2D;
-import java.util.Collection;
+import java.awt.*;
 import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.List;
 
 /**
  * A polygon (roughly a sequence of points, interpreted as a closed shape).
