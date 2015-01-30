@@ -22,6 +22,7 @@ public class SigMain {
         System.out.println("q9 : Question 9");
         System.out.println("q10a : Question 10a");
         System.out.println("q10b : Question 10b");
+        System.out.println("q10c : Question 10c");
         System.out.println("q11a : Question 11a");
         System.out.println("help : display commands");
         System.out.println("--------------------");
@@ -68,6 +69,13 @@ public class SigMain {
                         System.out.println("Error SQL");
                     }
                     break;
+                case "q10c":
+                    try {
+                        Request.question10c(connection);
+                    } catch (SQLException e) {
+                        System.out.println("Error SQL");
+                    }
+                    break;
                 case "q11a":
                         Request.question11a(connection);
                     break;
@@ -76,6 +84,7 @@ public class SigMain {
                     System.out.println("q9 : Question 9");
                     System.out.println("q10a : Question 10a");
                     System.out.println("q10b : Question 10b");
+                    System.out.println("q10c : Question 10c");
                     System.out.println("q11a : Question 11a");
                     break;
                 case "exit":

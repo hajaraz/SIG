@@ -61,6 +61,9 @@ public class Request {
         getGrenobleBuilding(connection);
     }
 
+    public static void question10c(Connection connection) throws SQLException{
+        getGrenobleAdministratif(connection);
+    }
     /**
      * Question 11a : Les quartiers de grenoble
      * @param connection
@@ -169,6 +172,37 @@ public class Request {
         }
         map.autoAdjust();
     }
+
+    /**
+     * Recuperer les zone administrative
+     * @param connection
+     * @throws SQLException
+     */
+    public static void getGrenobleAdministratif(Connection connection) throws SQLException {
+        MapPanel map = new MapPanel(4.75,44.01,0.1);
+        GeoMainFrame geo = new GeoMainFrame("Map", map);
+
+        st = connection.createStatement();
+        //prepareStatement("SELECT linestring, tags->'highway' as highway FROM ways WHERE tags?'highway' LIMIT 1;");
+        //result limited to 3 right now
+        res = st.executeQuery("SELECT linestring FROM ways WHERE tags->'boundary'='administrative' AND tags->'admin_level' in ('0','1','2','3','4','5','6','7');");
+
+        while (res.next()) {
+            Geometry g = ((PGgeometry) res.getObject(1)).getGeometry();
+            Point p = null;
+            geoexplorer.gui.Point drawedPoint = null;
+            geoexplorer.gui.LineString drawedLineString = new geoexplorer.gui.LineString();
+
+            for (int i = 0; i < g.numPoints(); i++){
+                p=g.getPoint(i);
+                drawedPoint = new geoexplorer.gui.Point(p.getX(),p.getY(), Color.blue);
+                drawedLineString.addPoint(drawedPoint);
+            }
+            map.addPrimitive(drawedLineString);
+        }
+        map.autoAdjust();
+    }
+
 
     /**
      * Permet de faire la variation de couleur
