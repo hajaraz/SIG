@@ -90,7 +90,7 @@ public class SigMain {
                     System.out.println("q10b : Question 10b");
                     System.out.println("q10c : Question 10c");
                     System.out.println("q11a : Question 11a");
-                    System.out.println("q11a : Question 11b");
+                    System.out.println("q11b : Question 11b");
                     break;
                 case "exit":
                     System.out.println("exit the program");

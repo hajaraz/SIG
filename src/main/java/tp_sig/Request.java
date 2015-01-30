@@ -61,6 +61,11 @@ public class Request {
         getGrenobleBuilding(connection);
     }
 
+    /**
+     * Qestion 10c
+     * @param connection
+     * @throws SQLException
+     */
     public static void question10c(Connection connection) throws SQLException{
         getGrenobleAdministratif(connection);
     }
@@ -157,7 +162,7 @@ public class Request {
         //result limited to 3 right now
         res = st.executeQuery("SELECT linestring, tags?'building' as building FROM ways WHERE tags?'building' AND ST_Intersects(ways.bbox,ST_SetSRID(ST_MakeBox2D(ST_Point(5.7,45.1),ST_Point(5.8,45.2)),4326));");
 
-        paintPolygon(res, map, Color.gray);
+        paintPolygon(res, map, Color.gray, Color.gray);
     }
 
     /**
@@ -177,8 +182,24 @@ public class Request {
         paintLine(res, map, Color.GRAY);
     }
 
+    public static void getBakeries(Connection connection) throws SQLException {
+
+        MapPanel map = new MapPanel(4.75,44.01,0.1);
+        GeoMainFrame geo = new GeoMainFrame("Map", map);
+        String bakeries = "SELECT nodes.geom  FROM nodes WHERE ST_XMAX(nodes.geom) <= 5.8 AND ST_XMIN(nodes.geom) >= 5.7 AND ST_YMAX(nodes.geom) <= 45.2 AND ST_YMIN(nodes.geom) >= 45.1 AND nodes.tags->'shop'='bakery';";
+        String neighbors = "SELECT quartier.the_geom as geom, quartier.quartier as quartier FROM ways, quartier WHERE ST_Intersects(ST_Transform(quartier.the_geom,4326)::geometry, ways.linestring) GROUP BY quartier,quartier.the_geom ;" ;
+
+        st = connection.createStatement();
+        res = st.executeQuery(neighbors);
+        paintPolygon(res, map, Color.blue, Color.white);
+
+        st = connection.createStatement();
+        res = st.executeQuery(bakeries);
+        paintPoint(res, map, Color.orange);
+    }
+
     /**
-     * afficher les zone nuisances sonores
+     * Tracer une carte des nuisances sonores
      * @param connection
      * @throws SQLException
      */
@@ -187,6 +208,7 @@ public class Request {
         MapPanel map = new MapPanel(4.75,44.01,0.1);
         GeoMainFrame geo = new GeoMainFrame("Map", map);
 
+        //Aeroports make more noise
         float proximity = 0.005f;
         String allAeroWays= "SELECT ST_Buffer(geometry(ways.linestring)," + proximity + ") FROM ways WHERE tags?'aeroway' AND ST_Intersects(ways.bbox,ST_SetSRID(ST_MakeBox2D(ST_Point(5.7,45.1),ST_Point(5.8,45.2)),4326));";
 
@@ -200,7 +222,7 @@ public class Request {
 
         st = connection.createStatement();
         res = st.executeQuery(allAeroWays);
-        paintPolygon(res, map, Color.gray);
+        paintPolygon(res, map, Color.gray, Color.gray);
 
         st = connection.createStatement();
         res = st.executeQuery(rails);
@@ -225,16 +247,24 @@ public class Request {
 
     }
 
-    public static void paintPolygon(ResultSet res, MapPanel map, Color color) throws SQLException{
+    /**
+     * paintPolygon
+     * @param res
+     * @param map
+     * @param out
+     * @param in
+     * @throws SQLException
+     */
+    public static void paintPolygon(ResultSet res, MapPanel map, Color out, Color in) throws SQLException{
         while (res.next()) {
             Geometry g = ((PGgeometry) res.getObject(1)).getGeometry();
             Point p = null;
             geoexplorer.gui.Point drawedPoint = null;
-            geoexplorer.gui.Polygon drawedPolygon = new geoexplorer.gui.Polygon(color, color);
+            geoexplorer.gui.Polygon drawedPolygon = new geoexplorer.gui.Polygon(out, in);
 
             for (int i = 0; i < g.numPoints(); i++){
                 p=g.getPoint(i);
-                drawedPoint = new geoexplorer.gui.Point(p.getX(),p.getY(), color);
+                drawedPoint = new geoexplorer.gui.Point(p.getX(),p.getY(), in);
                 drawedPolygon.addPoint(drawedPoint);
             }
             map.addPrimitive(drawedPolygon);
@@ -242,6 +272,13 @@ public class Request {
         map.autoAdjust();
     }
 
+    /**
+     * paintLine
+     * @param res
+     * @param map
+     * @param color
+     * @throws SQLException
+     */
     public static void paintLine(ResultSet res, MapPanel map, Color color) throws SQLException{
         while (res.next()) {
             Geometry g = ((PGgeometry) res.getObject(1)).getGeometry();
@@ -255,6 +292,23 @@ public class Request {
                 drawedLine.addPoint(drawedPoint);
             }
             map.addPrimitive(drawedLine);
+        }
+        map.autoAdjust();
+    }
+
+    /**
+     * paintPoint
+     * @param res
+     * @param map
+     * @param color
+     * @throws SQLException
+     */
+    public static void paintPoint(ResultSet res, MapPanel map, Color color) throws SQLException{
+        while (res.next()) {
+            Geometry g = ((PGgeometry) res.getObject(1)).getGeometry();
+            Point p = (Point) g;
+            geoexplorer.gui.Point drawedPoint = new geoexplorer.gui.Point(p.getX(),p.getY(), color);
+            map.addPrimitive(drawedPoint);
         }
         map.autoAdjust();
     }
