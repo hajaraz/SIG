@@ -24,6 +24,7 @@ public class SigMain {
         System.out.println("q10b : Question 10b");
         System.out.println("q10c : Question 10c");
         System.out.println("q11a : Question 11a");
+        System.out.println("q11b : Question 11b");
         System.out.println("help : display commands");
         System.out.println("--------------------");
 
@@ -77,7 +78,10 @@ public class SigMain {
                     }
                     break;
                 case "q11a":
-                        Request.question11a(connection);
+                        //Request.question11a(connection);
+                    break;
+                case "q11b":
+                    Request.question11b(connection);
                     break;
                 case "help":
                     System.out.println("q8 : Question 8");
@@ -86,6 +90,7 @@ public class SigMain {
                     System.out.println("q10b : Question 10b");
                     System.out.println("q10c : Question 10c");
                     System.out.println("q11a : Question 11a");
+                    System.out.println("q11a : Question 11b");
                     break;
                 case "exit":
                     System.out.println("exit the program");

@@ -68,13 +68,26 @@ public class Request {
      * Question 11a : Les quartiers de grenoble
      * @param connection
      */
-    public static void question11a(Connection connection){
+/*    public static void question11a(Connection connection){
         try {
             getGrenobleSchool(connection);
         } catch (SQLException e) {
             e.printStackTrace();
         }
+    }*/
+
+    /**
+     * Question 11b : Tracer une carte des nuisances sonores
+     * @param connection
+     */
+    public static void question11b(Connection connection){
+        try {
+            getNoiseArea(connection);
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
     }
+
     /**
      * Recuperer les noms et coordonnées d'un nom particulier - Méthode 1
      * @param name
@@ -127,20 +140,7 @@ public class Request {
         //result limited to 3 right now
         res = st.executeQuery("SELECT linestring, tags->'highway' as highway FROM ways WHERE tags?'highway' AND ST_Intersects(ways.bbox,ST_SetSRID(ST_MakeBox2D(ST_Point(5.7,45.1),ST_Point(5.8,45.2)),4326));");
 
-        while (res.next()) {
-            Geometry g = ((PGgeometry) res.getObject(1)).getGeometry();
-            Point p = null;
-            geoexplorer.gui.Point drawedPoint = null;
-            LineString drawedLineString = new LineString();
-
-            for (int i = 0; i < g.numPoints(); i++){
-                p=g.getPoint(i);
-                drawedPoint = new geoexplorer.gui.Point(p.getX(),p.getY(), Color.blue);
-                drawedLineString.addPoint(drawedPoint);
-            }
-            map.addPrimitive(drawedLineString);
-        }
-        map.autoAdjust();
+        paintLine(res, map, Color.BLACK);
     }
 
     /**
@@ -157,20 +157,7 @@ public class Request {
         //result limited to 3 right now
         res = st.executeQuery("SELECT linestring, tags?'building' as building FROM ways WHERE tags?'building' AND ST_Intersects(ways.bbox,ST_SetSRID(ST_MakeBox2D(ST_Point(5.7,45.1),ST_Point(5.8,45.2)),4326));");
 
-        while (res.next()) {
-            Geometry g = ((PGgeometry) res.getObject(1)).getGeometry();
-            Point p = null;
-            geoexplorer.gui.Point drawedPoint = null;
-            geoexplorer.gui.Polygon drawedPolygon = new geoexplorer.gui.Polygon();
-
-            for (int i = 0; i < g.numPoints(); i++){
-                p=g.getPoint(i);
-                drawedPoint = new geoexplorer.gui.Point(p.getX(),p.getY(), Color.blue);
-                drawedPolygon.addPoint(drawedPoint);
-            }
-            map.addPrimitive(drawedPolygon);
-        }
-        map.autoAdjust();
+        paintPolygon(res, map, Color.gray);
     }
 
     /**
@@ -187,87 +174,88 @@ public class Request {
         //result limited to 3 right now
         res = st.executeQuery("SELECT linestring FROM ways WHERE tags->'boundary'='administrative' AND tags->'admin_level' in ('0','1','2','3','4','5','6','7');");
 
-        while (res.next()) {
-            Geometry g = ((PGgeometry) res.getObject(1)).getGeometry();
-            Point p = null;
-            geoexplorer.gui.Point drawedPoint = null;
-            geoexplorer.gui.LineString drawedLineString = new geoexplorer.gui.LineString();
-
-            for (int i = 0; i < g.numPoints(); i++){
-                p=g.getPoint(i);
-                drawedPoint = new geoexplorer.gui.Point(p.getX(),p.getY(), Color.blue);
-                drawedLineString.addPoint(drawedPoint);
-            }
-            map.addPrimitive(drawedLineString);
-        }
-        map.autoAdjust();
+        paintLine(res, map, Color.GRAY);
     }
-
 
     /**
-     * Permet de faire la variation de couleur
-     * @param i
-     * @return
+     * afficher les zone nuisances sonores
+     * @param connection
+     * @throws SQLException
      */
-    public static Color getColorAlea(int i){
-        int red = (i*50)%255;
-        int green =( i*10) %255;
-        int blue = ( i*100) %255;
-        Color color = new Color(red,green,blue);
-       return color;
-    }
-    public static void getGrenobleSchool(Connection connection) throws SQLException {
+    public static void getNoiseArea(Connection connection) throws SQLException {
 
-        MapPanel  map = new MapPanel(4.75,44.01,0.1);
+        MapPanel map = new MapPanel(4.75,44.01,0.1);
         GeoMainFrame geo = new GeoMainFrame("Map", map);
-        int color=1;
+
+        float proximity = 0.005f;
+        String allAeroWays= "SELECT ST_Buffer(geometry(ways.linestring)," + proximity + ") FROM ways WHERE tags?'aeroway' AND ST_Intersects(ways.bbox,ST_SetSRID(ST_MakeBox2D(ST_Point(5.7,45.1),ST_Point(5.8,45.2)),4326));";
+
+        proximity = 0.001f;
+        String allRailways= "SELECT ways.linestring FROM ways WHERE tags?'railway'AND ST_Intersects(ways.bbox,ST_SetSRID(ST_MakeBox2D(ST_Point(5.7,45.1),ST_Point(5.8,45.2)),4326));";
+        String rails = "SELECT ST_Buffer(geometry(ways.linestring)," + proximity + ") FROM ways WHERE tags?'railway' AND ways.tags->'railway'='tram'AND ST_Intersects(ways.bbox,ST_SetSRID(ST_MakeBox2D(ST_Point(5.7,45.1),ST_Point(5.8,45.2)),4326));";
+        String trams = "SELECT ST_Buffer(geometry(ways.linestring)," + proximity + ") FROM ways WHERE tags?'railway' AND ways.tags->'railway'='rail'AND ST_Intersects(ways.bbox,ST_SetSRID(ST_MakeBox2D(ST_Point(5.7,45.1),ST_Point(5.8,45.2)),4326));";
+        String subways = "SELECT ST_Buffer(geometry(ways.linestring)," + proximity + ") FROM ways WHERE tags?'railway' AND ways.tags->'railway'='subway'AND ST_Intersects(ways.bbox,ST_SetSRID(ST_MakeBox2D(ST_Point(5.7,45.1),ST_Point(5.8,45.2)),4326));";
+        String constructions = "SELECT ST_Buffer(geometry(ways.linestring)," + proximity + ") FROM ways WHERE tags?'railway' AND ways.tags->'railway'='construction'AND ST_Intersects(ways.bbox,ST_SetSRID(ST_MakeBox2D(ST_Point(5.7,45.1),ST_Point(5.8,45.2)),4326));";
+
+
         st = connection.createStatement();
-       String requete = " SELECT   quartier.the_geom as geom, count(ways.tags->'name') as NbrPharma, quartier.quartier as quartier  " +
-                "FROM ways, quartier WHERE ways.tags->'amenity' like '%school%'" +
-                " and ST_Intersects(ST_Transform(quartier.the_geom,4326)::geometry, ways.linestring) GROUP BY quartier,quartier.the_geom " ;
+        res = st.executeQuery(allAeroWays);
+        paintPolygon(res, map, Color.gray);
+
+        st = connection.createStatement();
+        res = st.executeQuery(rails);
+        paintLine(res, map, Color.blue);
+
+        st = connection.createStatement();
+        res = st.executeQuery(allRailways);
+        paintLine(res, map, Color.black);
+
+        st = connection.createStatement();
+        res = st.executeQuery(trams);
+        paintLine(res, map, Color.green);
+
+        st = connection.createStatement();
+        res = st.executeQuery(subways);
+        paintLine(res, map, Color.cyan);
+
+        st = connection.createStatement();
+        res = st.executeQuery(constructions);
+        paintLine(res, map, Color.orange);
 
 
-        res = st.executeQuery(requete);
+    }
 
+    public static void paintPolygon(ResultSet res, MapPanel map, Color color) throws SQLException{
         while (res.next()) {
             Geometry g = ((PGgeometry) res.getObject(1)).getGeometry();
             Point p = null;
             geoexplorer.gui.Point drawedPoint = null;
-            geoexplorer.gui.Polygon drawedPolygon = new geoexplorer.gui.Polygon(getColorAlea(color),getColorAlea(color));
-            color++;
+            geoexplorer.gui.Polygon drawedPolygon = new geoexplorer.gui.Polygon(color, color);
+
             for (int i = 0; i < g.numPoints(); i++){
                 p=g.getPoint(i);
-                drawedPoint = new geoexplorer.gui.Point(p.getX(),p.getY(), Color.blue);
+                drawedPoint = new geoexplorer.gui.Point(p.getX(),p.getY(), color);
                 drawedPolygon.addPoint(drawedPoint);
             }
             map.addPrimitive(drawedPolygon);
         }
         map.autoAdjust();
-
-       /* String requetebis = "  SELECT  linestring  " +
-                "        FROM ways WHERE  ways.tags->'amenity' like '%school%' ;";
-        ResultSet result  ;
-        PreparedStatement state = connection.prepareStatement(requetebis);
-        result = state.executeQuery();
-
-        while (result.next() ) {
-            Geometry g = ((PGgeometry) result.getObject(1)).getGeometry();
-            Point p = null;
-            geoexplorer.gui.Point drawedPoint = null;
-            geoexplorer.gui.LineString drawedLine = new geoexplorer.gui.LineString();
-            for (int i = 0; i < g.numPoints(); i++) {
-                p = g.getPoint(i);
-                drawedPoint = new geoexplorer.gui.Point(p.getX(), p.getY(), Color.blue);
-                drawedLine.addPoint(drawedPoint);
-                //Print all the points
-                System.out.println("\t\tLongitude = " + p.getX());
-                System.out.println("\t\tLatitude = " + p.getY());
-
-            }
-            map.addPrimitive(drawedLine);
-
-        }
-        map.autoAdjust();*/
     }
 
+    public static void paintLine(ResultSet res, MapPanel map, Color color) throws SQLException{
+        while (res.next()) {
+            Geometry g = ((PGgeometry) res.getObject(1)).getGeometry();
+            Point p = null;
+            geoexplorer.gui.Point drawedPoint = null;
+            LineString drawedLine = new LineString(color);
+
+            for (int i = 0; i < g.numPoints(); i++){
+                p=g.getPoint(i);
+                drawedPoint = new geoexplorer.gui.Point(p.getX(),p.getY(), color);
+                drawedLine.addPoint(drawedPoint);
+            }
+            map.addPrimitive(drawedLine);
+        }
+        map.autoAdjust();
+    }
 }
